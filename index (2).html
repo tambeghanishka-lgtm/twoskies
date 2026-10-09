@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Two Skies, One Love</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Caveat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#5C2438;
+    --ink-dim:#B0728A;
+    --bg:#FFE3EC;
+    --bg-2:#FFF3F6;
+    --card:#FFFFFF;
+    --line: rgba(92,36,56,0.12);
+    --gold:#B4794F;
+    --blush:#FF7FA3;
+    --coffee:#8C5A3C;
+    --peach:#FFB4A2;
+    --lilac:#F5C2E7;
+    --rose:#E75480;
+    --radius:18px;
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); height:100%; }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; min-height:100%;
+    background: radial-gradient(ellipse at 20% -10%, #FFD1DE 0%, var(--bg) 55%);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{ font-family:'Quicksand',sans-serif; font-weight:600; letter-spacing:-0.01em; }
+  .script{ font-family:'Caveat',cursive; }
+  .stars{ position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.65; }
+  .stars text{ animation: floaty 6s ease-in-out infinite; }
+  @keyframes floaty{ 0%,100%{ transform:translateY(0px); } 50%{ transform:translateY(-10px); } }
+  .wrap{ position:relative; z-index:1; max-width:520px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
+
+  .floating-hearts{ position:fixed; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
+  .floating-hearts span{ position:absolute; bottom:-10vh; will-change:transform,opacity; animation-name:riseUp; animation-timing-function:linear; animation-iteration-count:infinite; }
+  @keyframes riseUp{
+    0%{ transform:translateY(0) translateX(0) rotate(0deg); opacity:0; }
+    10%{ opacity:.55; }
+    50%{ transform:translateY(-55vh) translateX(14px) rotate(10deg); }
+    90%{ opacity:.5; }
+    100%{ transform:translateY(-115vh) translateX(-10px) rotate(-8deg); opacity:0; }
+  }
+
+  /* ---- Setup & Login ---- */
+  .center-screen{ flex:1; display:flex; flex-direction:column; justify-content:center; padding:32px 24px; gap:22px; }
+  .kicker{ color:var(--gold); font-size:14px; margin:0 0 4px; }
+  .title-xl{ font-size:34px; line-height:1.15; margin:0; }
+  .sub{ color:var(--ink-dim); font-size:15px; line-height:1.5; margin:0; }
+  label{ display:block; font-size:13px; color:var(--ink-dim); margin:14px 0 6px; }
+  input[type=text], input[type=date], select, textarea{
+    width:100%; background:var(--card); border:1px solid var(--line); color:var(--ink);
+    border-radius:12px; padding:12px 14px; font-size:15px; font-family:inherit;
+  }
+  textarea{ resize:vertical; min-height:70px; }
+  .btn{
+    appearance:none; border:none; cursor:pointer; border-radius:12px; padding:13px 18px;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:15px; width:100%;
+    background:linear-gradient(135deg, var(--blush), #FFB6C9); color:#4A0E22;
+    box-shadow:0 8px 18px rgba(255,127,163,0.35);
+    margin-top:16px; transition:transform .15s ease;
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn.ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+  .btn.small{ width:auto; padding:8px 14px; font-size:13px; margin-top:0; }
+  .who-row{ display:flex; gap:12px; margin-top:6px; }
+  .who-btn{
+    flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:20px 10px; text-align:center; cursor:pointer; color:var(--ink); font-size:16px;
+  }
+  .who-btn:hover{ border-color:var(--gold); }
+  .textlink{ background:none; border:none; color:var(--gold); font-size:13px; text-decoration:underline; cursor:pointer; padding:4px 0; text-align:center; width:100%; font-family:inherit; }
+  .code-box{ display:none; }
+  .code-box.show{ display:block; }
+
+  /* ---- App shell ---- */
+  .app{ display:none; flex:1; flex-direction:column; }
+  header.top{ padding:18px 20px 8px; display:flex; align-items:center; justify-content:space-between; }
+  header.top .greet{ font-size:13px; color:var(--ink-dim); }
+  header.top .greet b{ color:var(--ink); font-weight:600; }
+  main.pages{ flex:1; padding:6px 20px 100px; }
+  .page{ display:none; }
+  .page.active{ display:block; animation:fade .35s ease; }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+  nav.tabbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:2;
+    background:rgba(17,18,42,0.9); backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);
+    padding: 10px max(12px, env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom,0px));
+    display:flex; justify-content:center;
+  }
+  nav.tabbar .inner{ max-width:520px; width:100%; display:flex; justify-content:space-around; }
+  nav.tabbar button{
+    background:none; border:none; color:var(--ink-dim); font-family:inherit; font-size:11px;
+    display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 8px;
+  }
+  nav.tabbar button .ic{ font-size:19px; }
+  nav.tabbar button.active{ color:var(--gold); }
+
+  /* ---- Home ---- */
+  .hero-card{
+    background:linear-gradient(160deg, #FFFFFF, #FFE9F0);
+    border:1px solid var(--line); border-radius:24px; padding:26px 22px; margin:10px 0 16px;
+    box-shadow:0 14px 30px rgba(255,143,171,0.22);
+  }
+  .hero-card .kicker{ margin-bottom:10px; }
+  .count-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:16px; }
+  .count-cell{ background:rgba(255,127,163,0.10); border-radius:12px; padding:9px 2px; text-align:center; }
+  .count-cell .num{ font-family:'Quicksand',sans-serif; font-size:19px; color:var(--blush); }
+  .count-cell .lab{ font-size:10px; color:var(--ink-dim); text-transform:lowercase; margin-top:2px; }
+
+  .sky-row{ display:flex; gap:12px; margin-bottom:16px; }
+  .sky-card{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px; box-shadow:0 8px 18px rgba(255,143,171,0.14); }
+  .sky-card .city{ font-size:13px; color:var(--ink-dim); }
+  .sky-card .clock{ font-family:'Quicksand',sans-serif; font-size:26px; margin-top:4px; color:var(--coffee); }
+  .sky-card .date{ font-size:12px; color:var(--ink-dim); margin-top:2px; }
+  .link-line{ text-align:center; color:var(--ink-dim); font-size:12px; margin:-6px 0 16px; }
+
+  .quote-card{ border-radius:18px; padding:18px; background:linear-gradient(160deg,#FFF7F2,#FFEDE0); border:1px dashed var(--coffee); font-family:'Caveat',cursive; font-style:normal; font-weight:600; font-size:16px; color:var(--ink); text-align:center; }
+  .coffee-line{ text-align:center; font-size:13px; color:var(--coffee); margin:12px 0 4px; }
+
+  /* ---- Notes ---- */
+  .note-card{ background:linear-gradient(160deg,#FFFFFF,#FFEFE8); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; box-shadow:0 6px 16px rgba(255,180,162,0.18); }
+  .note-card .meta{ display:flex; justify-content:space-between; font-size:11px; color:var(--ink-dim); margin-bottom:6px; }
+  .note-card .txt{ font-size:15px; line-height:1.5; }
+  .note-card .del{ background:none; border:none; color:var(--ink-dim); cursor:pointer; font-size:12px; }
+  .empty{ color:var(--ink-dim); font-size:14px; text-align:center; padding:30px 10px; }
+
+  /* ---- Love letters ---- */
+  .write-letter{ position:relative; background:linear-gradient(170deg,#FFFDF8,#FFF3E6); border:1px solid var(--line); border-radius:4px 4px 16px 16px; padding:22px 18px 18px; margin-top:6px; box-shadow:0 12px 26px rgba(255,143,171,0.18); overflow:hidden; }
+  .write-letter::before{ content:''; position:absolute; top:0; left:0; right:0; height:0; border-left:1px solid transparent; border-right:1px solid transparent; }
+  .envelope-flap{ position:absolute; top:0; left:0; right:0; height:46px; background:linear-gradient(135deg, var(--peach) 0%, var(--peach) 49.3%, transparent 49.7%), linear-gradient(45deg, var(--peach) 0%, var(--peach) 49.3%, transparent 49.7%); opacity:.55; }
+  .letter-salute{ font-family:'Caveat',cursive; font-weight:700; font-size:22px; color:var(--rose); margin:10px 0 8px; }
+  textarea.letter-paper{ background:repeating-linear-gradient(#FFFDF8, #FFFDF8 27px, rgba(92,36,56,0.08) 28px); line-height:28px; min-height:112px; font-family:'Inter',sans-serif; }
+  .signoff-row{ display:flex; align-items:center; gap:8px; margin-top:12px; font-family:'Caveat',cursive; font-size:19px; color:var(--rose); }
+  .signoff-row select{ width:auto; flex:none; font-family:'Caveat',cursive; font-size:18px; padding:8px 10px; color:var(--rose); font-weight:700; }
+  .letter-card{ position:relative; background:linear-gradient(170deg,#FFFDF8,#FFF3E6); border:1px solid var(--line); border-radius:4px 4px 16px 16px; padding:0; margin-bottom:16px; box-shadow:0 10px 22px rgba(255,180,162,0.22); overflow:hidden; cursor:pointer; }
+  .letter-card .env-flap{ height:38px; background:linear-gradient(135deg, var(--lilac) 0%, var(--lilac) 49.3%, transparent 49.7%), linear-gradient(45deg, var(--lilac) 0%, var(--lilac) 49.3%, transparent 49.7%); opacity:.6; }
+  .letter-card .env-face{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; }
+  .letter-card .env-left{ display:flex; align-items:center; gap:10px; }
+  .letter-card .stamp{ width:34px; height:34px; border-radius:50%; background:#fff; border:2px dashed var(--rose); display:flex; align-items:center; justify-content:center; font-size:16px; flex:none; }
+  .letter-card .env-name{ font-family:'Quicksand',sans-serif; font-weight:600; font-size:14px; }
+  .letter-card .env-postmark{ font-size:11px; color:var(--ink-dim); }
+  .letter-card .env-hint{ font-size:11px; color:var(--gold); }
+  .letter-card .del{ background:none; border:none; color:var(--ink-dim); cursor:pointer; font-size:12px; }
+  .letter-body{ display:none; padding:0 18px 18px; border-top:1px dashed var(--line); }
+  .letter-card.open .letter-body{ display:block; }
+  .letter-card.open .env-hint{ display:none; }
+  .letter-body .salute{ font-family:'Caveat',cursive; font-weight:700; font-size:21px; color:var(--rose); margin:14px 0 6px; }
+  .letter-body .txt{ font-size:15px; line-height:1.6; white-space:pre-wrap; }
+  .letter-body .sign{ font-family:'Caveat',cursive; font-weight:700; font-size:20px; color:var(--rose); margin-top:14px; text-align:right; }
+
+  /* ---- Bucket list ---- */
+  .cat-chips{ display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 4px; }
+  .cat-chip{ border:1.5px solid var(--line); background:#fff; color:var(--ink-dim); border-radius:999px; padding:7px 13px; font-size:13px; font-family:'Quicksand',sans-serif; cursor:pointer; }
+  .cat-chip.active{ border-color:var(--rose); color:var(--rose); background:rgba(231,84,128,0.08); font-weight:600; }
+  .cat-filter{ display:flex; gap:8px; flex-wrap:wrap; margin:16px 0 12px; }
+  .item{ display:flex; align-items:flex-start; gap:12px; background:linear-gradient(160deg,#FFFFFF,#FBF0FF); border:1px solid var(--line); border-left:4px solid var(--blush); border-radius:14px; padding:13px 14px; margin-bottom:10px; }
+  .item .chk{ width:22px; height:22px; border-radius:50%; border:2px solid var(--rose); flex:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px; }
+  .item.done .chk{ background:var(--rose); color:#fff; }
+  .item.done .txt{ text-decoration:line-through; color:var(--ink-dim); }
+  .item .txt{ flex:1; font-size:15px; line-height:1.4; }
+  .item .cat-badge{ font-size:11px; color:var(--ink-dim); margin-top:3px; display:block; }
+  .item .del{ background:none; border:none; color:var(--ink-dim); cursor:pointer; }
+
+  /* Settings */
+  .settings-block{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px; }
+  .settings-block h3{ margin:0 0 4px; font-size:16px; }
+  .row2{ display:flex; gap:10px; }
+  .row2 > div{ flex:1; }
+  code.sync{ display:block; word-break:break-all; background:#0e0f24; border-radius:10px; padding:10px; font-size:11px; color:var(--ink-dim); margin-top:8px; cursor:pointer; user-select:all; }
+
+  /* ---- Cute tab: game + stickers ---- */
+  .love-game{ background:linear-gradient(160deg,#FFF0F5,#FFE0EA); border:1px solid var(--line); border-radius:22px; padding:28px 20px; text-align:center; margin-bottom:22px; box-shadow:0 10px 24px rgba(255,143,171,0.2); }
+  .love-game .face{ font-size:44px; margin-bottom:8px; display:block; }
+  .love-game h3{ margin:0 0 18px; font-size:19px; }
+  .love-game .row{ display:flex; gap:14px; justify-content:center; align-items:center; position:relative; height:52px; }
+  .yes-btn{ background:linear-gradient(135deg,#FF7FA3,#FFB6C9); color:#4A0E22; border:none; border-radius:14px; padding:13px 26px; font-weight:600; font-size:15px; cursor:pointer; font-family:'Quicksand',sans-serif; }
+  .no-btn{ background:#fff; border:1px solid var(--line); color:var(--ink-dim); border-radius:14px; padding:13px 22px; font-size:13px; cursor:pointer; position:relative; transition:transform .12s ease; font-family:'Quicksand',sans-serif; }
+  .love-result{ margin-top:16px; font-family:'Caveat',cursive; font-size:22px; color:var(--blush); display:none; }
+
+  .stickers{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .sticker{ background:#fff; border:2px dashed var(--blush); border-radius:16px; padding:14px 10px; text-align:center; transform:rotate(var(--tilt,0deg)); box-shadow:0 8px 16px rgba(255,143,171,0.18); }
+  .sticker:nth-child(2n){ --tilt:1.5deg; }
+  .sticker:nth-child(2n+1){ --tilt:-1.5deg; }
+  .sticker .ic{ font-size:26px; }
+  .sticker .lab{ font-family:'Quicksand',sans-serif; font-weight:600; font-size:14px; margin-top:6px; }
+  .sticker .sub2{ font-size:11px; color:var(--ink-dim); margin-top:2px; }
+  .quiz-opt{ background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:12px; padding:12px 14px; font-size:14px; font-family:'Quicksand',sans-serif; text-align:left; cursor:pointer; }
+  .ws-grid{ display:grid; grid-template-columns:repeat(12, 1fr); gap:3px; margin:14px auto 0; max-width:320px; user-select:none; -webkit-user-select:none; }
+  .ws-cell{ aspect-ratio:1; display:flex; align-items:center; justify-content:center; background:#fff; border:1px solid var(--line); border-radius:5px; font-family:'Quicksand',sans-serif; font-weight:600; font-size:11px; color:var(--ink); cursor:pointer; }
+  .ws-cell.selected{ background:var(--peach); }
+  .ws-cell.found{ background:var(--blush); color:#fff; border-color:var(--blush); }
+  .ws-wordlist{ display:flex; flex-wrap:wrap; gap:7px; justify-content:center; margin-top:14px; }
+  .ws-word{ font-size:11px; padding:5px 10px; border-radius:999px; border:1.5px solid var(--line); color:var(--ink-dim); font-family:'Quicksand',sans-serif; }
+  .ws-word.found{ border-color:var(--rose); color:var(--rose); text-decoration:line-through; background:rgba(231,84,128,0.08); }
+  .notes-subtabs{ display:flex; gap:8px; margin-bottom:14px; }
+  .notes-subtabs .subtab{ flex:1; border:1.5px solid var(--line); background:#fff; color:var(--ink-dim); border-radius:999px; padding:8px 10px; font-family:'Quicksand',sans-serif; font-size:13px; cursor:pointer; }
+  .notes-subtabs .subtab.active{ border-color:var(--rose); color:var(--rose); background:rgba(231,84,128,0.08); font-weight:600; }
+  .scribble-colors{ display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap; }
+  .scribble-swatch{ width:26px; height:26px; border-radius:50%; border:2px solid rgba(0,0,0,0.08); cursor:pointer; padding:0; }
+  .scribble-swatch.active{ border-color:var(--ink); transform:scale(1.15); }
+  .scribble-card{ background:linear-gradient(170deg,#FFFDF8,#FFF3E6); border:1px solid var(--line); border-radius:16px; padding:12px; margin-bottom:16px; box-shadow:0 10px 22px rgba(255,180,162,0.22); }
+  .scribble-card img{ width:100%; border-radius:10px; background:#fff; display:block; border:1px solid var(--line); }
+  .scribble-card .meta{ display:flex; justify-content:space-between; font-size:11px; color:var(--ink-dim); margin-top:8px; }
+  .scribble-card .del{ background:none; border:none; color:var(--ink-dim); cursor:pointer; font-size:12px; }
+  .quiz-opt:active{ transform:scale(.98); }
+  .quiz-opt.selected{ border-color:var(--rose); background:rgba(231,84,128,0.08); }
+  .quiz-opt:disabled{ opacity:.55; cursor:default; }
+  .won-badge{ display:inline-flex; align-items:center; gap:6px; background:#fff; border:2px dashed var(--rose); border-radius:12px; padding:8px 12px; font-size:13px; margin:4px 6px 0 0; }
+</style>
+</head>
+<body>
+<svg class="stars" id="starfield"></svg>
+<div class="floating-hearts" id="floatingHearts"></div>
+<div class="wrap">
+
+  <!-- SETUP -->
+  <div id="setup" class="center-screen">
+    <p class="kicker">♥ before you begin</p>
+    <h1 class="title-xl">Let's build our little pink corner of the world. ☕💗</h1>
+    <p class="sub">Just a few details — you can change these anytime in Settings.</p>
+
+    <button type="button" class="textlink" id="have-code-link">Already got a sync code from them? Tap here to paste it →</button>
+    <div class="code-box" id="code-box">
+      <label>Paste the code they sent you</label>
+      <textarea id="setup-code-in" placeholder="Paste code here..." style="min-height:60px"></textarea>
+      <button class="btn" id="setup-code-apply">Open our space with this code 💗</button>
+    </div>
+
+    <div id="setup-form">
+      <label>Your name</label>
+      <input type="text" id="su-nameA" placeholder="e.g. Ghanishka">
+      <label>His name</label>
+      <input type="text" id="su-nameB" placeholder="e.g. Alexei">
+      <label>The day you started dating</label>
+      <input type="date" id="su-date">
+      <div class="row2">
+        <div>
+          <label>Your birthday 🎂</label>
+          <input type="date" id="su-bdayA" value="2000-03-01">
+        </div>
+        <div>
+          <label>His birthday 🎂</label>
+          <input type="date" id="su-bdayB" value="2000-02-06">
+        </div>
+      </div>
+      <label>His city (Russia)</label>
+      <select id="su-tzB">
+        <option value="Europe/Moscow">Moscow (MSK)</option>
+        <option value="Europe/Kaliningrad">Kaliningrad</option>
+        <option value="Asia/Yekaterinburg">Yekaterinburg</option>
+        <option value="Asia/Omsk">Omsk</option>
+        <option value="Asia/Novosibirsk">Novosibirsk</option>
+        <option value="Asia/Irkutsk">Irkutsk</option>
+        <option value="Asia/Vladivostok">Vladivostok</option>
+      </select>
+      <button class="btn" id="su-save">Create our space 💫</button>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div id="login" class="center-screen" style="display:none">
+    <p class="kicker">♥ welcome back</p>
+    <h1 class="title-xl" id="login-title">Two skies, one love. ☕🩷</h1>
+    <p class="sub">Who's opening this tonight?</p>
+    <div class="who-row">
+      <div class="who-btn" id="login-a">🐰🇮🇳<br><span id="login-a-name"></span></div>
+      <div class="who-btn" id="login-b">🐻🇷🇺<br><span id="login-b-name"></span></div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="app">
+    <header class="top">
+      <div class="greet">hi, <b id="hdr-name"></b> 🤍</div>
+      <button class="btn ghost small" id="logout">switch</button>
+    </header>
+
+    <main class="pages">
+      <!-- HOME -->
+      <section class="page active" id="page-home">
+        <div class="hero-card">
+          <p class="kicker">♥ together since</p>
+          <h2 style="margin:0 0 2px" id="start-line"></h2>
+          <div class="count-grid">
+            <div class="count-cell"><div class="num" id="c-y">0</div><div class="lab">years</div></div>
+            <div class="count-cell"><div class="num" id="c-m">0</div><div class="lab">months</div></div>
+            <div class="count-cell"><div class="num" id="c-d">0</div><div class="lab">days</div></div>
+            <div class="count-cell"><div class="num" id="c-h">0</div><div class="lab">hours</div></div>
+            <div class="count-cell"><div class="num" id="c-s">0</div><div class="lab">seconds</div></div>
+          </div>
+        </div>
+
+        <div class="hero-card" id="monthiversary-card" style="display:none; background:linear-gradient(160deg,#FFF3E9,#FFE3EE); border:2px dashed var(--rose); text-align:center;">
+          <p class="kicker">✨ happy monthiversary ✨</p>
+          <h2 id="monthiversary-title" style="margin:0 0 6px"></h2>
+          <p class="script" id="monthiversary-msg" style="font-size:18px; margin:6px 0 16px"></p>
+          <div class="stickers">
+            <div class="sticker"><div class="ic">🎂</div><div class="lab">Cake for us</div><div class="sub2">someday, together</div></div>
+            <div class="sticker"><div class="ic">💐</div><div class="lab">A bouquet</div><div class="sub2">for my favourite person</div></div>
+            <div class="sticker"><div class="ic">☕</div><div class="lab">Coffee date</div><div class="sub2">your chai, his cold brew</div></div>
+            <div class="sticker"><div class="ic">❤️</div><div class="lab" id="monthiversary-count-lab"></div><div class="sub2">and counting</div></div>
+          </div>
+        </div>
+
+        <div class="sky-row">
+          <div class="sky-card"><div class="city" id="cityA-label">India</div><div class="clock" id="clockA">--:--</div><div class="date" id="dateA"></div></div>
+          <div class="sky-card"><div class="city" id="cityB-label">Russia</div><div class="clock" id="clockB">--:--</div><div class="date" id="dateB"></div></div>
+        </div>
+        <p class="link-line" id="gap-line">— finding the gap between your two skies —</p>
+
+        <div class="sky-row" id="bday-row">
+          <div class="sky-card"><div class="city">🎂 <span id="bdayA-name"></span></div><div class="clock" id="bdayA-count" style="font-size:20px">--</div><div class="date" id="bdayA-date"></div></div>
+          <div class="sky-card"><div class="city">🎂 <span id="bdayB-name"></span></div><div class="clock" id="bdayB-count" style="font-size:20px">--</div><div class="date" id="bdayB-date"></div></div>
+        </div>
+
+        <p class="link-line" style="margin-bottom:4px">♥ today's reminder, new every day</p>
+        <div class="quote-card" id="quote"></div>
+        <p class="coffee-line">☕ your coffee, his cold brew — same love, different hours 🤎</p>
+      </section>
+
+      <!-- NOTES -->
+      <section class="page" id="page-notes">
+        <h2>Love letters 💌</h2>
+        <p class="sub" style="margin-bottom:10px">A real little letter — or a little doodle — left here for the other to find.</p>
+
+        <div class="notes-subtabs">
+          <button type="button" class="subtab active" data-sub="letters">💌 Letters</button>
+          <button type="button" class="subtab" data-sub="scribbles">🎨 Scribbles</button>
+        </div>
+
+        <div id="letters-view">
+          <div class="write-letter">
+            <div class="envelope-flap"></div>
+            <p class="letter-salute">Dear <span id="note-to-name">you</span>,</p>
+            <textarea id="note-input" class="letter-paper" placeholder="Write whatever's in your heart today..."></textarea>
+            <div class="signoff-row">
+              <span>—</span>
+              <select id="note-signoff">
+                <option>Love</option>
+                <option>Forever yours</option>
+                <option>Missing you always</option>
+                <option>With all my heart</option>
+                <option>Yours & only yours</option>
+                <option>Thinking of you</option>
+              </select>
+              <span id="note-from-name"></span>
+              <span>💋</span>
+            </div>
+            <button class="btn" id="note-add">Seal & Send 💌</button>
+          </div>
+
+          <div id="notes-list" style="margin-top:22px"></div>
+        </div>
+
+        <div id="scribbles-view" style="display:none">
+          <div class="write-letter">
+            <div class="envelope-flap"></div>
+            <p class="letter-salute">Doodle something for <span id="scribble-to-name">them</span></p>
+            <canvas id="scribble-canvas" width="300" height="220" style="width:100%; max-width:300px; aspect-ratio:300/220; background:#fff; border-radius:12px; border:1px solid var(--line); touch-action:none; cursor:crosshair; margin:10px auto 0; display:block;"></canvas>
+            <div class="scribble-colors" id="scribble-colors"></div>
+            <div style="display:flex; gap:8px; margin-top:14px">
+              <button type="button" class="btn ghost small" id="scribble-clear">Clear</button>
+              <button type="button" class="btn" id="scribble-save" style="flex:1">Save & Send 🎨</button>
+            </div>
+          </div>
+
+          <div id="scribbles-list" style="margin-top:22px"></div>
+        </div>
+      </section>
+
+      <!-- BUCKET LIST -->
+      <section class="page" id="page-bucket">
+        <h2>Our someday list ☕✨ 🐰🧸</h2>
+        <p class="sub" style="margin-bottom:6px">Every place, plan, taste and daydream for when the distance closes — saved here for good, so you can both read it years from now.</p>
+
+        <p class="sub" style="margin:14px 0 2px; font-size:12px">Pick a category — it filters the list below, and new dreams get added into it</p>
+        <div class="cat-chips" id="bucket-cat-picker"></div>
+
+        <textarea id="bucket-input" placeholder="Add a dream, a place, a dish, a plan..." rows="2" style="margin-top:10px"></textarea>
+        <button class="btn" id="bucket-add">Add to the list ✨</button>
+
+        <div id="bucket-list" style="margin-top:18px"></div>
+      </section>
+
+      <!-- CUTE -->
+      <section class="page" id="page-cute">
+        <h2>Just for fun 🐻</h2>
+        <div class="love-game">
+          <span class="face" id="game-face">🐻</span>
+          <h3 id="game-q">Do you love me?</h3>
+          <div class="row">
+            <button class="yes-btn" id="game-yes">Yes 🩷</button>
+            <button class="no-btn" id="game-no">No</button>
+          </div>
+          <p class="love-result" id="game-result"></p>
+        </div>
+
+        <h2 style="font-size:16px; margin:6px 0 12px">A little about us 🎟️</h2>
+        <div class="love-game" id="quiz-box">
+          <span class="face">🧠</span>
+          <p class="sub" id="quiz-progress" style="margin-bottom:6px">Question 1 of 6</p>
+          <h3 id="quiz-q">Loading...</h3>
+          <div id="quiz-opts" style="display:flex; flex-direction:column; gap:10px; margin-top:6px"></div>
+          <p class="love-result" id="quiz-result"></p>
+        </div>
+
+        <div id="scratch-wrap" style="display:none; margin-top:18px">
+          <div class="love-game">
+            <h3>Scratch to reveal your voucher ✨</h3>
+            <div style="position:relative; width:100%; max-width:280px; height:150px; margin:10px auto; border-radius:16px; overflow:hidden; border:2px dashed var(--rose);">
+              <div id="scratch-prize" style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(160deg,#FFF0F5,#FFE0EA);"></div>
+              <canvas id="scratch-canvas" style="position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:pointer;"></canvas>
+            </div>
+            <p class="sub" style="text-align:center; font-size:12px">Scratch with your finger or mouse 🖐️</p>
+          </div>
+        </div>
+
+        <div id="vouchers-won" style="margin-top:14px"></div>
+        <div id="answers-compare"></div>
+
+        <h2 style="font-size:16px; margin:20px 0 12px">Find our favourite spots ☕🔍</h2>
+        <div class="love-game" id="wordsearch-box">
+          <span class="face">🔍</span>
+          <h3 style="font-size:15px; margin-bottom:10px">Tap the first letter, then the last letter of each word</h3>
+          <div id="ws-grid" class="ws-grid"></div>
+          <div id="ws-wordlist" class="ws-wordlist"></div>
+          <p class="love-result" id="ws-result"></p>
+        </div>
+
+        <div class="love-game" style="margin-top:18px">
+          <span class="face">🐥</span>
+          <h3>Need a little something sweet?</h3>
+          <button class="yes-btn" id="compliment-btn" style="width:100%">Tap me 🩷</button>
+          <p class="love-result" id="compliment-out"></p>
+        </div>
+
+        <div class="love-game" style="margin-top:18px">
+          <span class="face">💞</span>
+          <h3>How much do I love you today?</h3>
+          <input type="range" id="love-meter" min="0" max="100" value="100" style="width:100%; accent-color:#FF7FA3">
+          <p class="love-result" id="love-meter-out" style="display:block; margin-top:10px">A whole lot 🩷</p>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings">
+        <h2>Settings 🐻🩷</h2>
+        <div class="settings-block">
+          <h3>Names & date</h3>
+          <label id="lbl-set-nameA">Your name</label><input type="text" id="set-nameA">
+          <label id="lbl-set-nameB">His name</label><input type="text" id="set-nameB">
+          <label>Anniversary date</label><input type="date" id="set-date">
+          <div class="row2">
+            <div>
+              <label id="lbl-set-bdayA">Your birthday 🎂</label><input type="date" id="set-bdayA">
+            </div>
+            <div>
+              <label id="lbl-set-bdayB">His birthday 🎂</label><input type="date" id="set-bdayB">
+            </div>
+          </div>
+          <label id="lbl-set-tzB">His city</label>
+          <select id="set-tzB">
+            <option value="Europe/Moscow">Moscow (MSK)</option>
+            <option value="Europe/Kaliningrad">Kaliningrad</option>
+            <option value="Asia/Yekaterinburg">Yekaterinburg</option>
+            <option value="Asia/Omsk">Omsk</option>
+            <option value="Asia/Novosibirsk">Novosibirsk</option>
+            <option value="Asia/Irkutsk">Irkutsk</option>
+            <option value="Asia/Vladivostok">Vladivostok</option>
+          </select>
+          <button class="btn" id="set-save">Save changes</button>
+        </div>
+        <div class="settings-block">
+          <h3>Sync between phones</h3>
+          <p class="sub">This site remembers things only on the device you're using. Whenever you add notes, someday-list items, or change details on your phone, tap "Copy sync code" and send it to him — he pastes it on his device (Settings, or right on the welcome screen if he hasn't set up yet) to catch up to the exact same data.</p>
+          <button class="btn ghost small" id="sync-copy">Copy sync code</button>
+          <code class="sync" id="sync-out" style="display:none"></code>
+          <p class="sub" id="sync-out-count" style="font-size:11px; margin-top:4px"></p>
+          <label style="margin-top:14px">Paste a code you received</label>
+          <textarea id="sync-in" placeholder="Paste code here..." style="min-height:50px"></textarea>
+          <button class="btn ghost small" id="sync-apply" style="margin-top:8px">Apply code</button>
+        </div>
+      </section>
+    </main>
+
+    <nav class="tabbar">
+      <div class="inner">
+        <button data-p="home" class="active"><span class="ic">♡</span>Home</button>
+        <button data-p="notes"><span class="ic">💌</span>Notes</button>
+        <button data-p="cute"><span class="ic">🐻</span>Cute</button>
+        <button data-p="bucket"><span class="ic">✨</span>Someday</button>
+        <button data-p="settings"><span class="ic">⚙</span>Settings</button>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<script>
+const LS_KEY = 'ldr_love_state_v1';
+const QUOTES = [
+  "The stars over you are the same stars over him — just a few hours behind.",
+  "Every timezone you cross, love arrives anyway.",
+  "Not in the same city, always in the same story.",
+  "Distance is just geography wearing a disguise.",
+  "Good morning to you, goodnight to him — love keeps both shifts.",
+  "Two skies, one heartbeat.",
+  "Your chai, his cold brew — same warmth, different hours.",
+  "Every cup I drink, I'm quietly sharing it with you.",
+  "One day, one cafe, two cups, no oceans between us.",
+  "My love for you isn't measured in kilometres — it's infinite, unconditional, unmoved by distance.",
+  "There is no version of far enough that changes how I feel about you.",
+  "I loved you yesterday, I love you today, I'll love you tomorrow — no conditions attached.",
+  "You don't have to earn my love. You already have all of it, always.",
+  "Some loves fade with distance. Ours just learned a new timezone.",
+  "If love were a currency, I'd have already given you more than I have.",
+  "You are not an option, a maybe, or a someday. You are certain.",
+  "However far Russia is from India, it isn't far enough to change how I feel.",
+  "I don't love you a little. I love you completely, endlessly, without a finish line.",
+  "Even on the days I don't say it, it's still true — infinitely, unconditionally.",
+  "You could be anywhere in the world and you'd still be my favourite place.",
+  "My love isn't waiting for the right moment. It's just here, always, for you.",
+  "No bad day, no time difference, no distance gets to touch how I feel about you.",
+  "I picked you once. I keep picking you, every single day since.",
+  "This love isn't going anywhere — it's not conditional on anything you do or don't do.",
+  "Wherever you wake up, know that somewhere, someone loves you completely.",
+  "You are loved without limits, without conditions, without an expiry date.",
+  "Some days I miss you quietly. Every day, I love you loudly, in my head.",
+  "The ocean between us is real. So is this — steady, whole, unconditional.",
+  "If distance was a test, we'd have passed it with an infinite love to spare.",
+  "You have my whole heart, not just the convenient parts of it."
+];
+function todaysQuote(){
+  const dayIndex = Math.floor(Date.now()/86400000); // changes once every UTC day, same for both of you
+  return QUOTES[dayIndex % QUOTES.length];
+}
+
+function loadState(){
+  try{ return JSON.parse(localStorage.getItem(LS_KEY)); }catch(e){ return null; }
+}
+function saveState(s){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(s)); }
+  catch(e){ alert("Hmm, this browser won't let the app save data (this can happen in private/incognito mode). Try a normal browser tab."); }
+}
+
+function decodeCode(raw){
+  const cleaned = raw.replace(/\s+/g, '');
+  return JSON.parse(decodeURIComponent(escape(atob(cleaned))));
+}
+function encodeState(s){
+  return btoa(unescape(encodeURIComponent(JSON.stringify(s))));
+}
+
+let state = loadState() || { nameA:'', nameB:'', date:'', bdayA:'', bdayB:'', tzB:'Europe/Moscow', notes:[], bucket:[], vouchers:[], quizAnswers:{A:{},B:{}}, quizProgress:{A:0,B:0}, scribbles:[] };
+normalizeState();
+function normalizeState(){
+  if(!state.vouchers) state.vouchers = [];
+  if(!state.scribbles) state.scribbles = [];
+  if(!state.quizAnswers) state.quizAnswers = {A:{},B:{}};
+  if(!state.quizAnswers.A) state.quizAnswers.A = {};
+  if(!state.quizAnswers.B) state.quizAnswers.B = {};
+  if(!state.quizProgress) state.quizProgress = {A:0,B:0};
+  if(typeof state.quizProgress.A !== 'number') state.quizProgress.A = 0;
+  if(typeof state.quizProgress.B !== 'number') state.quizProgress.B = 0;
+  const validTz = ['Europe/Moscow','Europe/Kaliningrad','Asia/Yekaterinburg','Asia/Omsk','Asia/Novosibirsk','Asia/Irkutsk','Asia/Vladivostok'];
+  if(!validTz.includes(state.tzB)) state.tzB = 'Europe/Moscow';
+}
+let currentUser = null; // 'A' or 'B'
+
+// ---------- "About us" quiz ----------
+const QUIZ_QUESTIONS = [
+  { q:"What is your favourite memory of us?", opts:[
+    {id:'a', text:'Our first conversation'},
+    {id:'b', text:'Our first proper date'},
+    {id:'c', text:'One of our silly moments'},
+    {id:'d', text:'That one moment you realized how much you love me ❤️'}
+  ]},
+  { q:"What do you miss the most about me when we're apart?", opts:[
+    {id:'a', text:'My voice'},
+    {id:'b', text:'My hugs'},
+    {id:'c', text:'My presence'},
+    {id:'d', text:'Everything about me 🥺'}
+  ]},
+  { q:"What is your favourite thing about talking to me?", opts:[
+    {id:'a', text:'We can talk about anything'},
+    {id:'b', text:'I always listen to you'},
+    {id:'c', text:'We make each other laugh'},
+    {id:'d', text:'You just feel happy talking to me ❤️'}
+  ]},
+  { q:"What is your favourite thing about our relationship?", opts:[
+    {id:'a', text:'Our friendship'},
+    {id:'b', text:'Our understanding'},
+    {id:'c', text:'Our silly moments'},
+    {id:'d', text:'The way we love each other 🫶'}
+  ]},
+  { q:"What do you miss most about being physically close to me?", opts:[
+    {id:'a', text:'Hugging me'},
+    {id:'b', text:'Holding my hand'},
+    {id:'c', text:'Sitting beside me'},
+    {id:'d', text:'All of it 😭❤️'}
+  ]},
+  { q:"What is your favourite thing I do for you?", opts:[
+    {id:'a', text:'Check on you'},
+    {id:'b', text:'Listen to you'},
+    {id:'c', text:'Make you smile'},
+    {id:'d', text:'Love you in my own little ways 🥹'}
+  ]},
+  { q:"What is your favourite thing about my smile?", opts:[
+    {id:'a', text:"It makes you smile too"},
+    {id:'b', text:"It's cute"},
+    {id:'c', text:"You can't stay angry when I smile"},
+    {id:'d', text:'Everything about it 😭'}
+  ]},
+  { q:"What do you miss most about our time together?", opts:[
+    {id:'a', text:'Our conversations'},
+    {id:'b', text:'Our hugs'},
+    {id:'c', text:'Laughing together'},
+    {id:'d', text:'The feeling of being with me ❤️'}
+  ]},
+  { q:"What is the first thing you think about when you miss me?", opts:[
+    {id:'a', text:'Our memories'},
+    {id:'b', text:'My face'},
+    {id:'c', text:"The next time we'll meet"},
+    {id:'d', text:'"I wish she was here." 🥺'}
+  ]},
+  { q:"What is your favourite way of showing me affection?", opts:[
+    {id:'a', text:'Hugging me'},
+    {id:'b', text:'Kissing me'},
+    {id:'c', text:'Teasing me 😂'},
+    {id:'d', text:'All of the above 😏'}
+  ]},
+  { q:"What do you miss more when you're far away from me?", opts:[
+    {id:'a', text:'My hugs 🫂'},
+    {id:'b', text:'My kisses 😘'},
+    {id:'c', text:'My annoyingness 😂'},
+    {id:'d', text:'Secretly... all three ❤️'}
+  ]},
+  { q:"What is your favourite thing about seeing me?", opts:[
+    {id:'a', text:'My smile'},
+    {id:'b', text:'My eyes'},
+    {id:'c', text:'My expressions'},
+    {id:'d', text:'The whole girl 😌❤️'}
+  ]},
+  { q:"What is your favourite thing about being my boyfriend?", opts:[
+    {id:'a', text:'Having someone who loves you'},
+    {id:'b', text:'Having someone to share everything with'},
+    {id:'c', text:'Getting to annoy me forever 😂'},
+    {id:'d', text:'All of it ❤️'}
+  ]}
+];
+const QUIZ_RESPONSES = {
+  a: "Aww, that's so you 🥹",
+  b: "That's really sweet 🩷",
+  c: "I love that about us too 🐻",
+  d: "My heart just melted a little 🫶"
+};
+const VOUCHERS = [
+  "One extra good morning text, no matter the timezone 🌅",
+  "A video call whenever you need it most, no excuses 📹🩷",
+  "My full attention for one whole hour, phone down 📵💗",
+  "The biggest hug the moment we're finally in the same room 🤗",
+  "One home-cooked meal made just the way you like it, someday 🍳",
+  "Unlimited cheesy compliments for a whole day 🥹"
+];
+let quizIndex = 0;
+
+// ---------- Starfield ----------
+(function drawStars(){
+  const svg = document.getElementById('starfield');
+  svg.setAttribute('viewBox','0 0 400 900');
+  svg.setAttribute('preserveAspectRatio','xMidYMid slice');
+  const pink = ['#FF8FAB','#FFC2D1','#FF5C8A'];
+  const critters = ['🐻','🐰','🐨','🐹','🦋','🐻‍❄️','🐼','🦄','🐥','🐱'];
+  let html = '';
+  for(let i=0;i<55;i++){
+    const x = Math.random()*400, y = Math.random()*900, size = Math.random()*10+9;
+    const roll = Math.random();
+    let char, fill='none';
+    if(roll < 0.55){ char='♥'; fill = pink[Math.floor(Math.random()*pink.length)]; }
+    else if(roll < 0.72){ char='☕'; fill = '#B4794F'; }
+    else { char = critters[Math.floor(Math.random()*critters.length)]; }
+    const dur = (Math.random()*3+5).toFixed(1);
+    html += `<text x="${x}" y="${y}" font-size="${size+(char.length>1?4:0)}" fill="${fill}" opacity="${(Math.random()*0.30+0.16).toFixed(2)}" style="animation-duration:${dur}s">${char}</text>`;
+  }
+  svg.innerHTML = html;
+})();
+
+(function drawFloatingHearts(){
+  const wrap = document.getElementById('floatingHearts');
+  const hearts = ['💗','💕','💖','❤️','🩷'];
+  let html = '';
+  for(let i=0;i<16;i++){
+    const left = (Math.random()*96).toFixed(1);
+    const size = (Math.random()*14+12).toFixed(0);
+    const dur = (Math.random()*10+14).toFixed(1);
+    const delay = (-Math.random()*24).toFixed(1);
+    const heart = hearts[Math.floor(Math.random()*hearts.length)];
+    html += `<span style="left:${left}%; font-size:${size}px; animation-duration:${dur}s; animation-delay:${delay}s;">${heart}</span>`;
+  }
+  wrap.innerHTML = html;
+})();
+
+// ---------- Boot ----------
+function boot(){
+  if(!state.nameA || !state.nameB || !state.date){
+    document.getElementById('app').style.display='none';
+    document.getElementById('login').style.display='none';
+    document.getElementById('setup').style.display='flex';
+    return;
+  }
+  const remembered = localStorage.getItem('loveapp_who');
+  if(remembered === 'A' || remembered === 'B'){
+    enterApp(remembered);
+    return;
+  }
+  document.getElementById('setup').style.display='none';
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-a-name').textContent = state.nameA;
+  document.getElementById('login-b-name').textContent = state.nameB;
+  document.getElementById('login').style.display='flex';
+}
+boot();
+
+// ---------- "I have a code" on the setup screen ----------
+document.getElementById('have-code-link').addEventListener('click', ()=>{
+  const box = document.getElementById('code-box');
+  const form = document.getElementById('setup-form');
+  const showingCode = box.classList.toggle('show');
+  form.style.display = showingCode ? 'none' : 'block';
+  document.getElementById('have-code-link').textContent = showingCode
+    ? '← or fill in the details yourself instead'
+    : 'Already got a sync code from them? Tap here to paste it →';
+});
+document.getElementById('setup-code-apply').addEventListener('click', ()=>{
+  const raw = document.getElementById('setup-code-in').value.trim();
+  if(!raw){ alert('Paste the code first 🤍'); return; }
+  try{
+    const parsed = decodeCode(raw);
+    if(!parsed || !parsed.nameA || !parsed.date){ throw new Error('bad shape'); }
+    state = parsed;
+    normalizeState();
+    saveState(state);
+    localStorage.removeItem('loveapp_who'); // let them pick who they are
+    boot();
+  }catch(e){
+    alert(`That code didn't work (${raw.length} characters received) — ask them to copy it again from Settings and paste ALL of it here, with nothing added before or after.`);
+  }
+});
+
+document.getElementById('su-save').addEventListener('click', ()=>{
+  const a = document.getElementById('su-nameA').value.trim();
+  const b = document.getElementById('su-nameB').value.trim();
+  const d = document.getElementById('su-date').value;
+  const bdA = document.getElementById('su-bdayA').value;
+  const bdB = document.getElementById('su-bdayB').value;
+  const tz = document.getElementById('su-tzB').value;
+  if(!a || !b || !d){ alert('Please fill in both names and the date 🤍'); return; }
+  state = { nameA:a, nameB:b, date:d, bdayA:bdA, bdayB:bdB, tzB:tz, notes:[], bucket:[], vouchers:[], quizAnswers:{A:{},B:{}}, quizProgress:{A:0,B:0}, scribbles:[] };
+  saveState(state);
+  boot();
+});
+
+document.getElementById('login-a').addEventListener('click', ()=>enterApp('A'));
+document.getElementById('login-b').addEventListener('click', ()=>enterApp('B'));
+document.getElementById('logout').addEventListener('click', ()=>{
+  currentUser = null;
+  localStorage.removeItem('loveapp_who');
+  document.getElementById('app').style.display='none';
+  document.getElementById('login').style.display='flex';
+});
+
+function enterApp(who){
+  currentUser = who;
+  localStorage.setItem('loveapp_who', who);
+  document.getElementById('setup').style.display='none';
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='flex';
+  refreshChrome();
+  renderNotes();
+  renderScribbles();
+  renderBucket();
+  renderBirthdays();
+  renderVouchers();
+  startQuiz();
+  fillSettings();
+  tick(); if(!window._tickInt) window._tickInt = setInterval(tick, 1000);
+}
+
+// All the bits of UI that depend on state.nameA/nameB/date/tzB — pulled into one
+// function so it can be re-run any time state changes (e.g. after a sync code import),
+// not just on the very first login.
+function refreshChrome(){
+  document.getElementById('hdr-name').textContent = currentUser==='A'? state.nameA : state.nameB;
+  document.getElementById('cityA-label').textContent = 'India · ' + state.nameA;
+  document.getElementById('cityB-label').textContent = tzShortLabel(state.tzB) + ' · ' + state.nameB;
+  document.getElementById('start-line').textContent = `${state.nameA} & ${state.nameB}, since ${formatDate(state.date)}`;
+  document.getElementById('quote').textContent = todaysQuote();
+  applyViewerLabels();
+}
+
+// Field labels in Settings read relative to whoever is currently logged in,
+// instead of always assuming the viewer is the India-based partner.
+function applyViewerLabels(){
+  const meIsA = currentUser === 'A';
+  const lblA = document.getElementById('lbl-set-nameA');
+  const lblB = document.getElementById('lbl-set-nameB');
+  const lblBdayA = document.getElementById('lbl-set-bdayA');
+  const lblBdayB = document.getElementById('lbl-set-bdayB');
+  const lblTzB = document.getElementById('lbl-set-tzB');
+  if(lblA) lblA.textContent = meIsA ? 'Your name' : 'Her name';
+  if(lblB) lblB.textContent = meIsA ? 'His name' : 'Your name';
+  if(lblBdayA) lblBdayA.textContent = meIsA ? 'Your birthday 🎂' : 'Her birthday 🎂';
+  if(lblBdayB) lblBdayB.textContent = meIsA ? 'His birthday 🎂' : 'Your birthday 🎂';
+  if(lblTzB) lblTzB.textContent = meIsA ? 'His city' : 'Your city';
+}
+
+function tzShortLabel(tz){
+  const map = {'Europe/Moscow':'Moscow','Europe/Kaliningrad':'Kaliningrad','Asia/Yekaterinburg':'Yekaterinburg','Asia/Omsk':'Omsk','Asia/Novosibirsk':'Novosibirsk','Asia/Irkutsk':'Irkutsk','Asia/Vladivostok':'Vladivostok'};
+  return map[tz] || 'Russia';
+}
+
+function daysUntilBirthday(iso){
+  if(!iso) return null;
+  const bd = new Date(iso+'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  let next = new Date(today.getFullYear(), bd.getMonth(), bd.getDate());
+  if(next < today) next = new Date(today.getFullYear()+1, bd.getMonth(), bd.getDate());
+  const diffDays = Math.round((next-today)/86400000);
+  return {diffDays, next};
+}
+function renderBirthdays(){
+  const row = document.getElementById('bday-row');
+  if(!state.bdayA && !state.bdayB){ row.style.display='none'; return; }
+  row.style.display='flex';
+  document.getElementById('bdayA-name').textContent = state.nameA;
+  document.getElementById('bdayB-name').textContent = state.nameB;
+  const a = daysUntilBirthday(state.bdayA);
+  const b = daysUntilBirthday(state.bdayB);
+  document.getElementById('bdayA-count').textContent = a ? (a.diffDays===0 ? 'Today! 🎉' : a.diffDays+'d') : '--';
+  document.getElementById('bdayB-count').textContent = b ? (b.diffDays===0 ? 'Today! 🎉' : b.diffDays+'d') : '--';
+  document.getElementById('bdayA-date').textContent = a ? a.next.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '';
+  document.getElementById('bdayB-date').textContent = b ? b.next.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '';
+}
+
+// ---------- Monthiversary ----------
+const MONTH_MESSAGES = [
+  "One month down, forever to go 🥹",
+  "Two months of loving you across every timezone 🌍",
+  "Three months, and you still feel like home 🏡",
+  "Four months of good mornings and goodnights, miles apart but never far 💗",
+  "Five months — still my favourite person, every single day 🐻",
+  "Six months of loving you from two different skies ☁️",
+  "Seven months of choosing you, again and again 🫶",
+  "Eight months, and my love keeps finding new ways to grow 🌱",
+  "Nine months of missing you and loving you at the same time 🥺",
+  "Ten months closer to no more distance 🧡",
+  "Eleven months, and you're still it for me 💍"
+];
+function monthMessageFor(n){
+  if(n % 12 === 0){ const y = n/12; return `${y} whole year${y>1?'s':''} of us, and I'd choose you every single time 💍✨`; }
+  const idx = ((n-1) % MONTH_MESSAGES.length);
+  return MONTH_MESSAGES[idx];
+}
+function ordinalMonthTitle(n){
+  if(n % 12 === 0){ const y = n/12; return `It's Our ${y} Year${y>1?'s':''} Anniversary! 🎉`; }
+  const suffix = (n%10===1 && n%100!==11) ? 'st' : (n%10===2 && n%100!==12) ? 'nd' : (n%10===3 && n%100!==13) ? 'rd' : 'th';
+  return `It's Our ${n}${suffix} Month Anniversary! 🎂`;
+}
+function renderMonthiversary(){
+  const card = document.getElementById('monthiversary-card');
+  if(!card) return;
+  if(!state.date){ card.style.display='none'; return; }
+  const start = new Date(state.date+'T00:00:00');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const startDay0 = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  if(now < startDay0 || now.getDate() !== start.getDate()){ card.style.display='none'; return; }
+  let months = (now.getFullYear()-start.getFullYear())*12 + (now.getMonth()-start.getMonth());
+  if(months < 1){ card.style.display='none'; return; }
+  document.getElementById('monthiversary-title').textContent = ordinalMonthTitle(months);
+  document.getElementById('monthiversary-msg').textContent = monthMessageFor(months);
+  document.getElementById('monthiversary-count-lab').textContent = months % 12 === 0 ? `${months/12} year${months/12>1?'s':''} of us` : `${months} months of us`;
+  card.style.display='block';
+}
+
+// ---------- "About us" quiz ----------
+function startQuiz(){
+  quizIndex = state.quizProgress[currentUser] || 0;
+  document.getElementById('scratch-wrap').style.display = 'none';
+  if(quizIndex >= QUIZ_QUESTIONS.length){
+    document.getElementById('quiz-box').style.display = 'block';
+    document.getElementById('quiz-progress').textContent = '';
+    document.getElementById('quiz-q').textContent = "That's all of them — you answered every single one 🥹💕";
+    document.getElementById('quiz-opts').innerHTML = '';
+    document.getElementById('quiz-result').style.display = 'none';
+  } else {
+    document.getElementById('quiz-box').style.display = 'block';
+    renderQuizQuestion();
+  }
+  renderAnswersCompare();
+}
+function renderQuizQuestion(){
+  const q = QUIZ_QUESTIONS[quizIndex];
+  document.getElementById('quiz-progress').textContent = `Question ${quizIndex+1} of ${QUIZ_QUESTIONS.length}`;
+  document.getElementById('quiz-q').textContent = q.q;
+  const optsWrap = document.getElementById('quiz-opts');
+  optsWrap.innerHTML = q.opts.map(o=>`<button type="button" class="quiz-opt" data-id="${o.id}">${o.id.toUpperCase()}. ${escapeHtml(o.text)}</button>`).join('');
+  const resultEl = document.getElementById('quiz-result');
+  resultEl.style.display = 'none';
+  resultEl.textContent = '';
+  optsWrap.querySelectorAll('.quiz-opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      optsWrap.querySelectorAll('.quiz-opt').forEach(b=> b.disabled = true);
+      btn.classList.add('selected');
+      resultEl.style.display = 'block';
+      resultEl.textContent = QUIZ_RESPONSES[btn.dataset.id] || 'Thank you for sharing that 🩷';
+      const chosenOpt = q.opts.find(o=>o.id===btn.dataset.id);
+      state.quizAnswers[currentUser][quizIndex] = chosenOpt ? chosenOpt.text : btn.textContent;
+      saveState(state);
+      renderAnswersCompare();
+      setTimeout(()=>{
+        quizIndex++;
+        state.quizProgress[currentUser] = quizIndex;
+        saveState(state);
+        const reachedEnd = quizIndex >= QUIZ_QUESTIONS.length;
+        const finishedBlockOfThree = quizIndex % 3 === 0;
+        if(reachedEnd || finishedBlockOfThree){ awardScratchCard(reachedEnd); }
+        else{ renderQuizQuestion(); }
+      }, 1300);
+    });
+  });
+}
+function renderAnswersCompare(){
+  const wrap = document.getElementById('answers-compare');
+  if(!wrap) return;
+  const themKey = currentUser==='A' ? 'B' : 'A';
+  const themName = currentUser==='A' ? state.nameB : state.nameA;
+  const mine = state.quizAnswers[currentUser] || {};
+  const theirs = state.quizAnswers[themKey] || {};
+  let rows = '';
+  QUIZ_QUESTIONS.forEach((q,i)=>{
+    const mineTxt = mine[i];
+    const theirTxt = theirs[i];
+    if(!mineTxt && !theirTxt) return;
+    rows += `<div class="note-card">
+      <div class="txt" style="font-weight:600; margin-bottom:8px">${escapeHtml(q.q)}</div>
+      <div class="meta" style="display:block; margin-bottom:3px">You: ${mineTxt? escapeHtml(mineTxt) : '<i>not answered yet</i>'}</div>
+      <div class="meta" style="display:block">${escapeHtml(themName)}: ${theirTxt? escapeHtml(theirTxt) : "<i>hasn't caught up here yet</i>"}</div>
+    </div>`;
+  });
+  wrap.innerHTML = rows ? ('<p class="sub" style="margin:16px 0 8px">Our answers, side by side 💕</p>' + rows) : '';
+}
+function giveVoucherReward(afterReveal){
+  const prizeIndex = state.vouchers.length % VOUCHERS.length;
+  const prize = VOUCHERS[prizeIndex];
+  state.vouchers.push({ id: Date.now()+'', text: prize, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  saveState(state);
+  renderVouchers();
+  document.getElementById('scratch-wrap').style.display = 'block';
+  setupScratchCard(prize, function onRevealed(){
+    setTimeout(()=>{
+      document.getElementById('scratch-wrap').style.display = 'none';
+      if(afterReveal) afterReveal();
+    }, 1400);
+  });
+}
+function awardScratchCard(isFinal){
+  document.getElementById('quiz-box').style.display = 'none';
+  giveVoucherReward(function(){
+    document.getElementById('quiz-box').style.display = 'block';
+    if(isFinal){
+      document.getElementById('quiz-progress').textContent = '';
+      document.getElementById('quiz-q').textContent = "That's all of them — you answered every single one 🥹💕";
+      document.getElementById('quiz-opts').innerHTML = '';
+      document.getElementById('quiz-result').style.display = 'none';
+    } else {
+      renderQuizQuestion();
+    }
+  });
+}
+function renderVouchers(){
+  const wrap = document.getElementById('vouchers-won');
+  if(!state.vouchers.length){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = '<p class="sub" style="margin-bottom:6px">Vouchers you\'ve unlocked</p>' +
+    state.vouchers.slice().reverse().map(v=>`<div class="won-badge">🎟️ ${escapeHtml(v.text)}</div>`).join('');
+}
+function setupScratchCard(prizeText, onRevealed){
+  document.getElementById('scratch-prize').innerHTML =
+    `<span style="font-size:28px">🎟️</span><p class="script" style="font-size:18px;margin:8px 10px 0;text-align:center">${escapeHtml(prizeText)}</p>`;
+  const oldCanvas = document.getElementById('scratch-canvas');
+  const canvas = oldCanvas.cloneNode(false);
+  canvas.style.display = 'block';
+  canvas.style.opacity = '1';
+  oldCanvas.parentNode.replaceChild(canvas, oldCanvas);
+  const ctx = canvas.getContext('2d');
+  let revealed = false;
+  function resize(){
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    ctx.fillStyle = '#E9AFC2';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#5C2438';
+    ctx.font = '600 15px Quicksand, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Scratch here ✨', canvas.width/2, canvas.height/2);
+  }
+  resize();
+  let drawing = false;
+  function pos(e){
+    const r = canvas.getBoundingClientRect();
+    const p = e.touches && e.touches.length ? e.touches[0] : e;
+    return { x: p.clientX - r.left, y: p.clientY - r.top };
+  }
+  function erase(x,y){
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x, y, 20, 0, Math.PI*2);
+    ctx.fill();
+  }
+  function checkDone(){
+    const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let cleared = 0, sampled = 0;
+    for(let i=3; i<data.length; i+=4*15){ sampled++; if(data[i]===0) cleared++; }
+    if(sampled && cleared/sampled > 0.45 && !revealed){
+      revealed = true;
+      canvas.style.transition = 'opacity .4s ease';
+      canvas.style.opacity = '0';
+      setTimeout(()=>{ canvas.style.display = 'none'; if(onRevealed) onRevealed(); }, 400);
+    }
+  }
+  function start(e){ drawing = true; const p = pos(e); erase(p.x, p.y); }
+  function move(e){ if(!drawing) return; e.preventDefault(); const p = pos(e); erase(p.x, p.y); checkDone(); }
+  function end(){ drawing = false; checkDone(); }
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  canvas.addEventListener('touchstart', start, {passive:false});
+  canvas.addEventListener('touchmove', move, {passive:false});
+  canvas.addEventListener('touchend', end);
+}
+
+// ---------- Love game ----------
+(function(){
+  const yes = document.getElementById('game-yes');
+  const no = document.getElementById('game-no');
+  const result = document.getElementById('game-result');
+  const face = document.getElementById('game-face');
+  const faces = ['🐻','🐰','🐨','🦋','🐹'];
+  const dodgeMsgs = ["Try again 🐾","Nope, not today 🙈","Nice try 💗","Come on, be honest 🐻"];
+  yes.addEventListener('click', ()=>{
+    face.textContent = '🥰';
+    result.style.display='block';
+    result.textContent = "Yay, I knew it 🩷";
+  });
+  let dodgeCount = 0;
+  function dodge(e){
+    dodgeCount++;
+    const row = no.closest('.row');
+    const bounds = row.getBoundingClientRect();
+    const maxX = Math.max(0, bounds.width - no.offsetWidth - 10);
+    const x = Math.random()*maxX;
+    no.style.position='absolute';
+    no.style.left = x+'px';
+    no.textContent = dodgeMsgs[dodgeCount % dodgeMsgs.length];
+    face.textContent = faces[dodgeCount % faces.length];
+  }
+  no.addEventListener('mouseenter', dodge);
+  no.addEventListener('click', dodge);
+  no.addEventListener('touchstart', (e)=>{ e.preventDefault(); dodge(); });
+
+  const compliments = [
+    "You make far away feel close 🩷",
+    "My favourite notification is your name 💌",
+    "You're the best part of every timezone 🌍",
+    "Still my person, every single day 🐻",
+    "You're cuter than every emoji combined 🥹",
+    "Missing you is my favourite kind of ache 🧸",
+    "Home is wherever you are 🏡🩷"
+  ];
+  const cBtn = document.getElementById('compliment-btn');
+  const cOut = document.getElementById('compliment-out');
+  if(cBtn){ cBtn.addEventListener('click', ()=>{
+    cOut.style.display='block';
+    cOut.textContent = compliments[Math.floor(Math.random()*compliments.length)];
+  }); }
+
+  const meter = document.getElementById('love-meter');
+  const meterOut = document.getElementById('love-meter-out');
+  if(meter){ meter.addEventListener('input', ()=>{
+    const v = +meter.value;
+    let msg = v<30 ? "Wait, only that much? 🥺" : v<70 ? "A good, solid amount 🩷" : v<99 ? "A whole lot 🩷" : "Infinite, actually ♾️🩷";
+    meterOut.textContent = msg;
+  }); }
+})();
+
+function formatDate(iso){
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+}
+
+// ---------- Tabs ----------
+document.querySelectorAll('nav.tabbar button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabbar button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+btn.dataset.p).classList.add('active');
+  });
+});
+
+// ---------- Countdown + clocks ----------
+function tick(){
+  if(!state.date) return;
+  try{ renderMonthiversary(); }catch(e){ console.error('monthiversary error', e); }
+  try{
+  const start = new Date(state.date+'T00:00:00');
+  const now = new Date();
+  let diffMs = now - start;
+  if(diffMs < 0) diffMs = 0;
+
+  let years = now.getFullYear()-start.getFullYear();
+  let months = now.getMonth()-start.getMonth();
+  let daysRemainder = now.getDate()-start.getDate();
+  if(daysRemainder<0){ months--; }
+  if(months<0){ years--; months+=12; }
+  const totalSeconds = Math.floor(diffMs/1000);
+  const totalDays = Math.floor(diffMs/86400000);
+  const totalHours = Math.floor(diffMs/3600000);
+
+  document.getElementById('c-y').textContent = years;
+  document.getElementById('c-m').textContent = months;
+  document.getElementById('c-d').textContent = totalDays.toLocaleString();
+  document.getElementById('c-h').textContent = totalHours.toLocaleString();
+  document.getElementById('c-s').textContent = totalSeconds.toLocaleString();
+
+  const optsTime = {hour:'2-digit', minute:'2-digit'};
+  const optsDate = {weekday:'short', day:'numeric', month:'short'};
+  const safeTzB = (typeof state.tzB === 'string' && state.tzB) ? state.tzB : 'Europe/Moscow';
+  try{
+    document.getElementById('clockA').textContent = now.toLocaleTimeString('en-IN', {...optsTime, timeZone:'Asia/Kolkata'});
+    document.getElementById('dateA').textContent = now.toLocaleDateString('en-IN', {...optsDate, timeZone:'Asia/Kolkata'});
+    document.getElementById('clockB').textContent = now.toLocaleTimeString('en-GB', {...optsTime, timeZone: safeTzB});
+    document.getElementById('dateB').textContent = now.toLocaleDateString('en-GB', {...optsDate, timeZone: safeTzB});
+
+    const hA = parseInt(now.toLocaleString('en-GB',{hour:'2-digit', hour12:false, timeZone:'Asia/Kolkata'}));
+    const hB = parseInt(now.toLocaleString('en-GB',{hour:'2-digit', hour12:false, timeZone: safeTzB}));
+    let diffH = hA - hB;
+    if(diffH < -12) diffH += 24; if(diffH > 12) diffH -= 24;
+    const gapTxt = diffH===0 ? 'right now, your clocks match exactly' : `right now, ${state.nameA} is ${Math.abs(diffH)}h ${diffH>0?'ahead of':'behind'} ${state.nameB}`;
+    document.getElementById('gap-line').textContent = '— ' + gapTxt + ' —';
+  }catch(e){ console.error('clock error', e); }
+  }catch(e){ console.error('tick error', e); }
+}
+
+// ---------- Notes ----------
+function renderNotes(){
+  const wrap = document.getElementById('notes-list');
+  document.getElementById('note-to-name').textContent = currentUser==='A' ? state.nameB : state.nameA;
+  document.getElementById('note-from-name').textContent = currentUser==='A' ? state.nameA : state.nameB;
+  if(!state.notes.length){ wrap.innerHTML = '<div class="empty">No letters yet — be the first to seal one 💌</div>'; return; }
+  wrap.innerHTML = state.notes.slice().reverse().map(n=>{
+    const authorName = n.author==='A' ? state.nameA : state.nameB;
+    const toName = n.author==='A' ? state.nameB : state.nameA;
+    const signoff = n.signoff || 'Love';
+    return `
+    <div class="letter-card" data-id="${n.id}">
+      <div class="env-flap"></div>
+      <div class="env-face" onclick="toggleLetter('${n.id}')">
+        <div class="env-left">
+          <div class="stamp">💌</div>
+          <div>
+            <div class="env-name">From ${escapeHtml(authorName)}</div>
+            <div class="env-postmark">${n.date}</div>
+          </div>
+        </div>
+        <div>
+          <span class="env-hint">tap to open</span>
+          <button class="del" onclick="event.stopPropagation(); deleteNote('${n.id}')">✕</button>
+        </div>
+      </div>
+      <div class="letter-body">
+        <p class="salute">Dear ${escapeHtml(toName)},</p>
+        <p class="txt">${escapeHtml(n.text)}</p>
+        <p class="sign">${escapeHtml(signoff)}, ${escapeHtml(authorName)} 💋</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleLetter(id){
+  const card = document.querySelector(`.letter-card[data-id="${id}"]`);
+  if(card) card.classList.toggle('open');
+}
+document.getElementById('note-add').addEventListener('click', ()=>{
+  const el = document.getElementById('note-input');
+  const text = el.value.trim();
+  if(!text) return;
+  const signoff = document.getElementById('note-signoff').value;
+  state.notes.push({id: Date.now()+'', author: currentUser, text, signoff, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})});
+  saveState(state); el.value=''; renderNotes();
+});
+function deleteNote(id){ state.notes = state.notes.filter(n=>n.id!==id); saveState(state); renderNotes(); }
+
+// ---------- Letters/Scribbles sub-tabs ----------
+document.querySelectorAll('.notes-subtabs .subtab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.notes-subtabs .subtab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const sub = btn.dataset.sub;
+    document.getElementById('letters-view').style.display = sub==='letters' ? 'block' : 'none';
+    document.getElementById('scribbles-view').style.display = sub==='scribbles' ? 'block' : 'none';
+  });
+});
+
+// ---------- Scribbles ----------
+const SCRIBBLE_COLORS = ['#5C2438','#E75480','#FF7FA3','#B4794F','#F5C2E7','#8C5A3C'];
+let scribbleColor = SCRIBBLE_COLORS[0];
+let scribbleDrawing = false;
+let scribbleCtx = null;
+function renderScribbleColors(){
+  const wrap = document.getElementById('scribble-colors');
+  wrap.innerHTML = SCRIBBLE_COLORS.map(c=>
+    `<button type="button" class="scribble-swatch ${c===scribbleColor?'active':''}" data-color="${c}" style="background:${c}"></button>`
+  ).join('');
+  wrap.querySelectorAll('.scribble-swatch').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ scribbleColor = btn.dataset.color; renderScribbleColors(); });
+  });
+}
+function setupScribbleCanvas(){
+  const canvas = document.getElementById('scribble-canvas');
+  const ctx = canvas.getContext('2d');
+  scribbleCtx = ctx;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: (t.clientX-rect.left) * (canvas.width/rect.width), y: (t.clientY-rect.top) * (canvas.height/rect.height) };
+  }
+  let last = null;
+  function start(e){ e.preventDefault(); scribbleDrawing = true; last = getPos(e); }
+  function move(e){
+    if(!scribbleDrawing) return;
+    e.preventDefault();
+    const pos = getPos(e);
+    ctx.strokeStyle = scribbleColor;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    last = pos;
+  }
+  function end(){ scribbleDrawing = false; last = null; }
+  canvas.onpointerdown = start;
+  canvas.onpointermove = move;
+  canvas.onpointerup = end;
+  canvas.onpointerleave = end;
+}
+document.getElementById('scribble-clear').addEventListener('click', ()=>{
+  if(!scribbleCtx) return;
+  const canvas = document.getElementById('scribble-canvas');
+  scribbleCtx.fillStyle = '#fff';
+  scribbleCtx.fillRect(0,0,canvas.width,canvas.height);
+});
+document.getElementById('scribble-save').addEventListener('click', ()=>{
+  const canvas = document.getElementById('scribble-canvas');
+  const dataURL = canvas.toDataURL('image/png');
+  state.scribbles.push({ id: Date.now()+'', author: currentUser, dataURL, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  saveState(state);
+  scribbleCtx.fillStyle = '#fff';
+  scribbleCtx.fillRect(0,0,canvas.width,canvas.height);
+  renderScribbles();
+});
+function renderScribbles(){
+  document.getElementById('scribble-to-name').textContent = currentUser==='A' ? state.nameB : state.nameA;
+  const wrap = document.getElementById('scribbles-list');
+  if(!state.scribbles.length){ wrap.innerHTML = '<div class="empty">No doodles yet — draw the first one 🎨</div>'; return; }
+  wrap.innerHTML = state.scribbles.slice().reverse().map(s=>{
+    const authorName = s.author==='A' ? state.nameA : state.nameB;
+    return `<div class="scribble-card" data-id="${s.id}">
+      <img src="${s.dataURL}" alt="scribble">
+      <div class="meta"><span>From ${escapeHtml(authorName)} · ${s.date}</span><button class="del" onclick="deleteScribble('${s.id}')">remove</button></div>
+    </div>`;
+  }).join('');
+}
+function deleteScribble(id){ state.scribbles = state.scribbles.filter(s=>s.id!==id); saveState(state); renderScribbles(); }
+renderScribbleColors();
+setupScribbleCanvas();
+
+// ---------- Bucket list ----------
+const BUCKET_CATEGORIES = {
+  places:     { icon:'🗺️', label:'Places' },
+  food:       { icon:'🍜', label:'Food' },
+  activities: { icon:'🎡', label:'Activities' },
+  fantasies:  { icon:'🔥', label:'Fantasies' },
+  songs:      { icon:'🎵', label:'Songs' }
+};
+let bucketCat = 'all';
+function renderBucketCatPicker(){
+  const wrap = document.getElementById('bucket-cat-picker');
+  const allBtn = `<button type="button" class="cat-chip ${bucketCat==='all'?'active':''}" data-cat="all">✨ All</button>`;
+  const rest = Object.keys(BUCKET_CATEGORIES).map(k=>
+    `<button type="button" class="cat-chip ${bucketCat===k?'active':''}" data-cat="${k}">${BUCKET_CATEGORIES[k].icon} ${BUCKET_CATEGORIES[k].label}</button>`
+  ).join('');
+  wrap.innerHTML = allBtn + rest;
+  wrap.querySelectorAll('.cat-chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ bucketCat = btn.dataset.cat; renderBucketCatPicker(); renderBucket(); });
+  });
+}
+function renderBucket(){
+  const wrap = document.getElementById('bucket-list');
+  const items = state.bucket.filter(b => bucketCat==='all' || (b.cat||'places')===bucketCat);
+  if(!items.length){ wrap.innerHTML = '<div class="empty">Nothing here yet — start dreaming ✨</div>'; return; }
+  wrap.innerHTML = items.slice().reverse().map(b=>{
+    const cat = BUCKET_CATEGORIES[b.cat||'places'] || BUCKET_CATEGORIES.places;
+    return `
+    <div class="item ${b.done?'done':''}">
+      <div class="chk" onclick="toggleBucket('${b.id}')">${b.done?'✓':''}</div>
+      <div style="flex:1">
+        <div class="txt">${escapeHtml(b.text)}</div>
+        <span class="cat-badge">${cat.icon} ${cat.label} · ${(b.addedBy==='A'?state.nameA:state.nameB)}${b.date? ' · '+b.date : ''}</span>
+      </div>
+      <button class="del" onclick="deleteBucket('${b.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function addBucketItem(){
+  const el = document.getElementById('bucket-input');
+  const text = el.value.trim();
+  if(!text) return;
+  const cat = (bucketCat === 'all') ? 'places' : bucketCat;
+  state.bucket.push({id: Date.now()+'', text, cat, done:false, addedBy: currentUser, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})});
+  saveState(state); el.value=''; renderBucket();
+}
+document.getElementById('bucket-add').addEventListener('click', addBucketItem);
+document.getElementById('bucket-input').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); addBucketItem(); }
+});
+function toggleBucket(id){ const it = state.bucket.find(b=>b.id===id); if(it){ it.done=!it.done; saveState(state); renderBucket(); } }
+function deleteBucket(id){ state.bucket = state.bucket.filter(b=>b.id!==id); saveState(state); renderBucket(); }
+renderBucketCatPicker();
+
+// ---------- "Find our favourite spots" word search ----------
+const WS_WORDS = ['CSEVEN','TAN','PICCOLO','BRIM','COLDBREW','PINACOLADA','CRISPYVEG'];
+const WS_LABELS = { CSEVEN:'C.SEVEN', TAN:'TAN', PICCOLO:'PICCOLO', BRIM:'BRIM', COLDBREW:'COLD BREW', PINACOLADA:'PIÑA COLADA', CRISPYVEG:'CRISPY VEG' };
+const WS_SIZE = 12;
+let wsGridData = null;
+let wsFound = new Set();
+let wsSelection = [];
+
+function generateWordSearch(){
+  const size = WS_SIZE;
+  const grid = Array.from({length:size}, ()=>Array(size).fill(null));
+  const dirs = [[0,1],[1,0],[1,1]];
+  const placements = [];
+  const words = WS_WORDS.slice().sort((a,b)=>b.length-a.length);
+  words.forEach(word=>{
+    let placed = false, attempts = 0;
+    while(!placed && attempts < 300){
+      attempts++;
+      const dir = dirs[Math.floor(Math.random()*dirs.length)];
+      const maxR = dir[0]===1 ? size-word.length : size-1;
+      const maxC = dir[1]===1 ? size-word.length : size-1;
+      if(maxR < 0 || maxC < 0) continue;
+      const r0 = Math.floor(Math.random()*(maxR+1));
+      const c0 = Math.floor(Math.random()*(maxC+1));
+      let ok = true;
+      const cells = [];
+      for(let i=0;i<word.length;i++){
+        const r = r0 + dir[0]*i, c = c0 + dir[1]*i;
+        const existing = grid[r][c];
+        if(existing !== null && existing !== word[i]){ ok=false; break; }
+        cells.push([r,c]);
+      }
+      if(ok){
+        cells.forEach((rc,i)=>{ grid[rc[0]][rc[1]] = word[i]; });
+        placements.push({word, cells});
+        placed = true;
+      }
+    }
+  });
+  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for(let r=0;r<size;r++) for(let c=0;c<size;c++){
+    if(grid[r][c]===null) grid[r][c] = ALPHA[Math.floor(Math.random()*ALPHA.length)];
+  }
+  return {size, grid, placements};
+}
+function renderWordSearchGrid(){
+  const gridEl = document.getElementById('ws-grid');
+  let html = '';
+  for(let r=0;r<wsGridData.size;r++){
+    for(let c=0;c<wsGridData.size;c++){
+      html += `<div class="ws-cell" data-r="${r}" data-c="${c}">${wsGridData.grid[r][c]}</div>`;
+    }
+  }
+  gridEl.innerHTML = html;
+  gridEl.onclick = (e)=>{
+    const cell = e.target.closest('.ws-cell');
+    if(!cell) return;
+    wsCellClick(parseInt(cell.dataset.r,10), parseInt(cell.dataset.c,10));
+  };
+}
+function wsCellAt(r,c){ return document.querySelector(`.ws-cell[data-r="${r}"][data-c="${c}"]`); }
+function wsCellClick(r,c){
+  if(wsSelection.length === 0){
+    wsSelection = [[r,c]];
+    const cell = wsCellAt(r,c);
+    if(cell) cell.classList.add('selected');
+    return;
+  }
+  const [r0,c0] = wsSelection[0];
+  const dr = r - r0, dc = c - c0;
+  let cells = [];
+  if(dr === 0 && dc !== 0){
+    const step = dc > 0 ? 1 : -1;
+    for(let i=0;i<=Math.abs(dc);i++) cells.push([r0, c0+step*i]);
+  } else if(dc === 0 && dr !== 0){
+    const step = dr > 0 ? 1 : -1;
+    for(let i=0;i<=Math.abs(dr);i++) cells.push([r0+step*i, c0]);
+  } else if(Math.abs(dr) === Math.abs(dc) && dr !== 0){
+    const stepR = dr>0?1:-1, stepC = dc>0?1:-1;
+    for(let i=0;i<=Math.abs(dr);i++) cells.push([r0+stepR*i, c0+stepC*i]);
+  }
+  if(cells.length){
+    const letters = cells.map(([rr,cc])=>wsGridData.grid[rr][cc]).join('');
+    const reversed = letters.split('').reverse().join('');
+    const match = wsGridData.placements.find(p => !wsFound.has(p.word) && (p.word===letters || p.word===reversed));
+    if(match){
+      wsFound.add(match.word);
+      match.cells.forEach(([rr,cc])=>{ const cell = wsCellAt(rr,cc); if(cell) cell.classList.add('found'); });
+      renderWsWordList();
+      if(wsFound.size === WS_WORDS.length){
+        setTimeout(wordSearchComplete, 500);
+      }
+    }
+  }
+  document.querySelectorAll('.ws-cell.selected').forEach(el=>el.classList.remove('selected'));
+  wsSelection = [];
+}
+function renderWsWordList(){
+  const wrap = document.getElementById('ws-wordlist');
+  wrap.innerHTML = WS_WORDS.map(w=>`<span class="ws-word ${wsFound.has(w)?'found':''}">${WS_LABELS[w]||w}</span>`).join('');
+}
+function wordSearchComplete(){
+  const result = document.getElementById('ws-result');
+  result.style.display = 'block';
+  result.textContent = "You found every single one 🥹☕💕";
+  document.getElementById('wordsearch-box').style.display = 'none';
+  giveVoucherReward(function(){
+    document.getElementById('wordsearch-box').style.display = 'block';
+  });
+}
+wsGridData = generateWordSearch();
+renderWordSearchGrid();
+renderWsWordList();
+
+// ---------- Settings ----------
+function fillSettings(){
+  document.getElementById('set-nameA').value = state.nameA;
+  document.getElementById('set-nameB').value = state.nameB;
+  document.getElementById('set-date').value = state.date;
+  document.getElementById('set-bdayA').value = state.bdayA || '';
+  document.getElementById('set-bdayB').value = state.bdayB || '';
+  document.getElementById('set-tzB').value = state.tzB;
+}
+document.getElementById('set-save').addEventListener('click', ()=>{
+  state.nameA = document.getElementById('set-nameA').value.trim() || state.nameA;
+  state.nameB = document.getElementById('set-nameB').value.trim() || state.nameB;
+  state.date = document.getElementById('set-date').value || state.date;
+  state.bdayA = document.getElementById('set-bdayA').value || state.bdayA;
+  state.bdayB = document.getElementById('set-bdayB').value || state.bdayB;
+  state.tzB = document.getElementById('set-tzB').value;
+  saveState(state);
+  refreshChrome();
+  renderBirthdays();
+  alert('Saved 🤍');
+});
+
+// ---------- Sync code ----------
+document.getElementById('sync-copy').addEventListener('click', ()=>{
+  const code = encodeState(state);
+  const out = document.getElementById('sync-out');
+  out.style.display='block'; out.textContent = code;
+  const countLine = document.getElementById('sync-out-count');
+  if(countLine) countLine.textContent = `${code.length} characters — tap the code above to select it all, then copy`;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(()=>{
+      if(countLine) countLine.textContent = `✅ Copied! (${code.length} characters) — now paste it directly into WhatsApp/Messages with nothing added before or after`;
+    }).catch(()=>{
+      if(countLine) countLine.textContent = `${code.length} characters — auto-copy didn't work, so tap the code above to select it, then copy manually`;
+    });
+  }
+  out.onclick = ()=>{
+    const range = document.createRange();
+    range.selectNodeContents(out);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  };
+});
+document.getElementById('sync-apply').addEventListener('click', ()=>{
+  const raw = document.getElementById('sync-in').value.trim();
+  if(!raw) return;
+  try{
+    const parsed = decodeCode(raw);
+    if(!parsed || !parsed.nameA || !parsed.date){ throw new Error('bad shape'); }
+    state = parsed; normalizeState(); saveState(state);
+    fillSettings(); refreshChrome(); renderNotes(); renderScribbles(); renderBucket(); renderBirthdays(); renderVouchers();
+    startQuiz(); tick();
+    alert('Synced 🤍');
+  }catch(e){ alert(`That code didn't work (${raw.length} characters received) — ask them to send it again, and make sure you paste ALL of it with nothing extra added before or after.`); }
+});
+
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+</script>
+</body>
+</html>
